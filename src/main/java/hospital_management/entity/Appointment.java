@@ -19,6 +19,10 @@ public class Appointment {
     private LocalDateTime appointmentDate;
 
     private String status;
+    private Integer tokenNumber;
+    private Integer priorityLevel = 0;
+
+private Boolean returningPatient = false;
 
     public Long getAppointmentId() {
         return appointmentId;
@@ -55,4 +59,29 @@ public class Appointment {
     public void setStatus(String status) {
         this.status = status;
     }
+    public Integer getTokenNumber() {
+    return tokenNumber;
+}
+
+public void setTokenNumber(Integer tokenNumber) {
+    this.tokenNumber = tokenNumber;
+}
+public Boolean getReturningPatient() {
+    return returningPatient;
+}
+
+public void setReturningPatient(
+        Boolean returningPatient) {
+    this.returningPatient = returningPatient;
+}
+
+public Integer getPriorityLevel() {
+    return priorityLevel;
+}
+
+public void setPriorityLevel(
+        Integer priorityLevel) {
+    this.priorityLevel = priorityLevel;
+}
+
 }

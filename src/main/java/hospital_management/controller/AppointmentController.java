@@ -32,7 +32,61 @@ public class AppointmentController {
     public List<Appointment> getAllAppointments() {
     return appointmentRepository.findAll();
 }
+@PutMapping("/appointments/{id}/complete")
+public Appointment completeAppointment(
+        @PathVariable Long id) {
 
+    Appointment appointment =
+            appointmentRepository.findById(id).orElse(null);
+
+    if (appointment == null) {
+        return null;
+    }
+
+    appointment.setStatus("COMPLETED");
+
+    return appointmentRepository.save(appointment);
+}
+@PutMapping("/appointments/{id}/cancel")
+public Appointment cancelAppointment(
+        @PathVariable Long id) {
+
+    Appointment appointment =
+            appointmentRepository.findById(id).orElse(null);
+
+    if (appointment == null) {
+        return null;
+    }
+
+    appointment.setStatus("CANCELLED");
+
+    return appointmentRepository.save(appointment);
+}
+
+@PutMapping(
+    "/appointments/{id}/return"
+)
+public Appointment returnPatient(
+        @PathVariable Long id) {
+
+    Appointment appointment =
+            appointmentRepository
+                    .findById(id)
+                    .orElse(null);
+
+    if (appointment == null) {
+        return null;
+    }
+
+    appointment.setReturningPatient(
+            true);
+
+    appointment.setPriorityLevel(
+            1);
+
+    return appointmentRepository
+            .save(appointment);
+}
     @PostMapping("/appointments")
     public Appointment createAppointment(
             @RequestParam Long patientId,
@@ -48,15 +102,21 @@ public class AppointmentController {
             return null;
         }
 
-        Appointment appointment = new Appointment();
+       Appointment appointment = new Appointment();
 
-        appointment.setPatient(patient);
-        appointment.setDoctor(doctor);
-        appointment.setAppointmentDate(LocalDateTime.now());
-        appointment.setStatus("BOOKED");
+appointment.setPatient(patient);
+appointment.setDoctor(doctor);
+appointment.setAppointmentDate(LocalDateTime.now());
+appointment.setStatus("BOOKED");
 
-        return appointmentRepository.save(appointment);
-    
+List<Appointment> appointments =
+        appointmentRepository.findAll();
+
+appointment.setTokenNumber(
+        appointments.size() + 1
+);
+
+return appointmentRepository.save(appointment);
 
     }
 }

@@ -1,11 +1,8 @@
 package hospital_management.controller;
 
-import hospital_management.entity.Doctor;
-import hospital_management.entity.Patient;
-import hospital_management.entity.Prescription;
-import hospital_management.repository.DoctorRepository;
-import hospital_management.repository.PatientRepository;
-import hospital_management.repository.PrescriptionRepository;
+import hospital_management.entity.*;
+import hospital_management.repository.*;
+import hospital_management.service.QRCodeService;
 
 import org.springframework.web.bind.annotation.*;
 
@@ -13,20 +10,31 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
+@CrossOrigin(origins = "*")
 public class PrescriptionController {
 
     private final PrescriptionRepository prescriptionRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final QRCodeService qrCodeService;
 
     public PrescriptionController(
             PrescriptionRepository prescriptionRepository,
             PatientRepository patientRepository,
-            DoctorRepository doctorRepository) {
+            DoctorRepository doctorRepository,
+            QRCodeService qrCodeService) {
 
-        this.prescriptionRepository = prescriptionRepository;
-        this.patientRepository = patientRepository;
-        this.doctorRepository = doctorRepository;
+        this.prescriptionRepository =
+                prescriptionRepository;
+
+        this.patientRepository =
+                patientRepository;
+
+        this.doctorRepository =
+                doctorRepository;
+
+        this.qrCodeService =
+                qrCodeService;
     }
 
     @GetMapping("/prescriptions")
@@ -38,22 +46,81 @@ public class PrescriptionController {
     public Prescription createPrescription(
             @RequestParam Long patientId,
             @RequestParam Long doctorId,
-            @RequestBody Prescription prescription) {
+            @RequestBody Prescription request) {
 
         Patient patient =
-                patientRepository.findById(patientId).orElse(null);
+                patientRepository.findById(patientId)
+                        .orElse(null);
 
         Doctor doctor =
-                doctorRepository.findById(doctorId).orElse(null);
+                doctorRepository.findById(doctorId)
+                        .orElse(null);
 
         if (patient == null || doctor == null) {
             return null;
         }
 
-        prescription.setPatient(patient);
-        prescription.setDoctor(doctor);
-        prescription.setPrescriptionDate(LocalDateTime.now());
+        Prescription prescription =
+                new Prescription();
 
-        return prescriptionRepository.save(prescription);
+        prescription.setPatient(patient);
+
+        prescription.setDoctor(doctor);
+
+        prescription.setMedicine(
+                request.getMedicine());
+
+        prescription.setDosage(
+                request.getDosage());
+
+        prescription.setNotes(
+                request.getNotes());
+
+        prescription.setPrescriptionDate(
+                LocalDateTime.now());
+
+        return prescriptionRepository.save(
+                prescription);
+    }
+
+    @DeleteMapping("/prescriptions/{id}")
+    public void deletePrescription(
+            @PathVariable Long id) {
+
+        prescriptionRepository.deleteById(id);
+    }
+
+    @GetMapping("/prescriptions/{id}/qr")
+    public String generatePrescriptionQR(
+            @PathVariable Long id)
+            throws Exception {
+
+        Prescription prescription =
+                prescriptionRepository
+                        .findById(id)
+                        .orElse(null);
+
+        if (prescription == null) {
+            return null;
+        }
+
+        String qrData =
+                "Prescription ID: "
+                        + prescription.getPrescriptionId()
+                        + "\nPatient: "
+                        + prescription.getPatient()
+                                .getFullName()
+                        + "\nDoctor: "
+                        + prescription.getDoctor()
+                                .getDoctorName()
+                        + "\nMedicine: "
+                        + prescription.getMedicine()
+                        + "\nDosage: "
+                        + prescription.getDosage()
+                        + "\nNotes: "
+                        + prescription.getNotes();
+
+        return qrCodeService
+                .generateQRCode(qrData);
     }
 }

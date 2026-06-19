@@ -28,7 +28,23 @@ public class BillController {
     public List<Bill> getAllBills() {
         return billRepository.findAll();
     }
+    @DeleteMapping("/bills/{id}")
+public void deleteBill(@PathVariable Long id) {
+    billRepository.deleteById(id);
+}
+@PutMapping("/bills/{id}/pay")
+public Bill markBillPaid(@PathVariable Long id) {
 
+    Bill bill = billRepository.findById(id).orElse(null);
+
+    if (bill == null) {
+        return null;
+    }
+
+    bill.setPaymentStatus("PAID");
+
+    return billRepository.save(bill);
+}
     @PostMapping("/bills")
     public Bill createBill(
             @RequestParam Long patientId,

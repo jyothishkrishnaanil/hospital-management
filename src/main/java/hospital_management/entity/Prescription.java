@@ -81,6 +81,4 @@ public class Prescription {
     public void setPrescriptionDate(LocalDateTime prescriptionDate) {
         this.prescriptionDate = prescriptionDate;
     }
-
-    // Getters and Setters
 }

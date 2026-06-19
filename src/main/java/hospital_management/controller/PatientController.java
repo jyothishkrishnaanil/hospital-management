@@ -34,14 +34,8 @@ public class PatientController {
 public Patient createPatient(@RequestBody Patient patient) {
     return patientRepository.save(patient);
 }
-@GetMapping("/patients/search")
-public Patient searchPatient(@RequestParam String phone) {
-    return patientRepository.findByPhoneNumber(phone).orElse(null);
-}
-@DeleteMapping("/patients/{id}")
-public void deletePatient(@PathVariable Long id) {
-    patientRepository.deleteById(id);
-}
+
+
 @PutMapping("/patients/{id}")
 public Patient updatePatient(
         @PathVariable Long id,
@@ -58,10 +52,19 @@ public Patient updatePatient(
     patient.setBloodGroup(updatedPatient.getBloodGroup());
     patient.setPhoneNumber(updatedPatient.getPhoneNumber());
     patient.setAddress(updatedPatient.getAddress());
-    patient.setEmergencyContactName(updatedPatient.getEmergencyContactName());
-    patient.setEmergencyContactNumber(updatedPatient.getEmergencyContactNumber());
+   // patient.setEmergencyContactName(updatedPatient.getEmergencyContactName());
+    //patient.setEmergencyContactNumber(updatedPatient.getEmergencyContactNumber());
 
     return patientRepository.save(patient);
+}
+@GetMapping("/patients/search")
+public Patient searchPatient(@RequestParam("phone") String phone) {
+    return patientRepository.findByPhoneNumber(phone)
+            .orElse(null);
+}
+@DeleteMapping("/patients/{id}")
+public void deletePatient(@PathVariable Long id) {
+    patientRepository.deleteById(id);
 }
 
 }
