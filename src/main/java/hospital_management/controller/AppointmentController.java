@@ -6,11 +6,11 @@ import hospital_management.entity.Doctor;
 import hospital_management.repository.AppointmentRepository;
 import hospital_management.repository.PatientRepository;
 import hospital_management.repository.DoctorRepository;
-import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 public class AppointmentController {
@@ -28,95 +28,124 @@ public class AppointmentController {
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
     }
+
     @GetMapping("/appointments")
     public List<Appointment> getAllAppointments() {
-    return appointmentRepository.findAll();
-}
-@PutMapping("/appointments/{id}/complete")
-public Appointment completeAppointment(
-        @PathVariable Long id) {
-
-    Appointment appointment =
-            appointmentRepository.findById(id).orElse(null);
-
-    if (appointment == null) {
-        return null;
+        return appointmentRepository.findAll();
     }
 
-    appointment.setStatus("COMPLETED");
+    @PutMapping("/appointments/{id}/complete")
+    public Appointment completeAppointment(
+            @PathVariable Long id) {
 
-    return appointmentRepository.save(appointment);
-}
-@PutMapping("/appointments/{id}/cancel")
-public Appointment cancelAppointment(
-        @PathVariable Long id) {
+        Appointment appointment =
+                appointmentRepository.findById(id)
+                        .orElse(null);
 
-    Appointment appointment =
-            appointmentRepository.findById(id).orElse(null);
+        if (appointment == null) {
+            return null;
+        }
 
-    if (appointment == null) {
-        return null;
+        appointment.setStatus("COMPLETED");
+
+        return appointmentRepository.save(
+                appointment);
     }
 
-    appointment.setStatus("CANCELLED");
+    @PutMapping("/appointments/{id}/cancel")
+    public Appointment cancelAppointment(
+            @PathVariable Long id) {
 
-    return appointmentRepository.save(appointment);
-}
+        Appointment appointment =
+                appointmentRepository.findById(id)
+                        .orElse(null);
 
-@PutMapping(
-    "/appointments/{id}/return"
-)
-public Appointment returnPatient(
-        @PathVariable Long id) {
+        if (appointment == null) {
+            return null;
+        }
 
-    Appointment appointment =
-            appointmentRepository
-                    .findById(id)
-                    .orElse(null);
+        appointment.setStatus("CANCELLED");
 
-    if (appointment == null) {
-        return null;
+        return appointmentRepository.save(
+                appointment);
     }
 
-    appointment.setReturningPatient(
-            true);
+    @PutMapping("/appointments/{id}/return")
+    public Appointment returnPatient(
+            @PathVariable Long id) {
 
-    appointment.setPriorityLevel(
-            1);
+        Appointment appointment =
+                appointmentRepository
+                        .findById(id)
+                        .orElse(null);
 
-    return appointmentRepository
-            .save(appointment);
-}
+        if (appointment == null) {
+            return null;
+        }
+
+        appointment.setReturningPatient(true);
+        appointment.setPriorityLevel(1);
+
+        return appointmentRepository
+                .save(appointment);
+    }
+
+    @PutMapping("/appointments/call-next")
+    public Appointment callNextPatient() {
+
+        Appointment currentPatient =
+                appointmentRepository
+                        .findFirstByStatusOrderByPriorityLevelDescTokenNumberAsc(
+                                "BOOKED");
+
+        if (currentPatient == null) {
+            return null;
+        }
+
+        currentPatient.setStatus(
+                "COMPLETED");
+
+        appointmentRepository.save(
+                currentPatient);
+
+        return appointmentRepository
+                .findFirstByStatusOrderByPriorityLevelDescTokenNumberAsc(
+                        "BOOKED");
+    }
+
     @PostMapping("/appointments")
     public Appointment createAppointment(
             @RequestParam Long patientId,
             @RequestParam Long doctorId) {
 
         Patient patient =
-                patientRepository.findById(patientId).orElse(null);
+                patientRepository.findById(patientId)
+                        .orElse(null);
 
         Doctor doctor =
-                doctorRepository.findById(doctorId).orElse(null);
+                doctorRepository.findById(doctorId)
+                        .orElse(null);
 
         if (patient == null || doctor == null) {
             return null;
         }
 
-       Appointment appointment = new Appointment();
+        Appointment appointment =
+                new Appointment();
 
-appointment.setPatient(patient);
-appointment.setDoctor(doctor);
-appointment.setAppointmentDate(LocalDateTime.now());
-appointment.setStatus("BOOKED");
+        appointment.setPatient(patient);
+        appointment.setDoctor(doctor);
+        appointment.setAppointmentDate(
+                LocalDateTime.now());
+        appointment.setStatus("BOOKED");
 
-List<Appointment> appointments =
-        appointmentRepository.findAll();
+        List<Appointment> appointments =
+                appointmentRepository.findAll();
 
-appointment.setTokenNumber(
-        appointments.size() + 1
-);
+        appointment.setTokenNumber(
+                appointments.size() + 1);
 
-return appointmentRepository.save(appointment);
-
+        return appointmentRepository
+                .save(appointment);
     }
 }

@@ -18,4 +18,6 @@ public interface AppointmentRepository
 List<Appointment>
 findByStatusOrderByPriorityLevelDescTokenNumberAsc(
         String status);
+        Appointment findFirstByStatusOrderByPriorityLevelDescTokenNumberAsc(
+        String status);
 }

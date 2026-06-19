@@ -2,17 +2,19 @@ package hospital_management.controller;
 
 import hospital_management.repository.PatientRepository;
 import hospital_management.repository.DoctorRepository;
+import hospital_management.entity.Appointment;
 import hospital_management.repository.AppointmentRepository;
 import hospital_management.repository.BillRepository;
 import hospital_management.repository.MedicalRecordRepository;
 import hospital_management.repository.PrescriptionRepository;
 import hospital_management.repository.HospitalVisitRepository;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class DashboardController {
@@ -44,14 +46,25 @@ public class DashboardController {
     }
 
     @GetMapping("/dashboard")
-    public Map<String, Long> getDashboardStats() {
+    public Map<String, Object> getDashboardStats() {
 
-        Map<String, Long> stats = new HashMap<>();
+        Map<String, Object> stats = new HashMap<>();
 
-        stats.put("totalPatients", patientRepository.count());
-        stats.put("totalDoctors", doctorRepository.count());
-        stats.put("totalAppointments", appointmentRepository.count());
-        stats.put("totalBills", billRepository.count());
+        stats.put(
+                "totalPatients",
+                patientRepository.count());
+
+        stats.put(
+                "totalDoctors",
+                doctorRepository.count());
+
+        stats.put(
+                "totalAppointments",
+                appointmentRepository.count());
+
+        stats.put(
+                "totalBills",
+                billRepository.count());
 
         stats.put(
                 "totalMedicalRecords",
@@ -65,6 +78,96 @@ public class DashboardController {
                 "totalVisits",
                 hospitalVisitRepository.count());
 
+        List<Appointment> booked =
+                appointmentRepository
+                        .findByStatusOrderByPriorityLevelDescTokenNumberAsc(
+                                "BOOKED");
+
+        if (!booked.isEmpty()) {
+            booked.remove(0);
+        }
+
+        long waitingQueue =
+                booked.size();
+
+        long priorityPatients =
+                booked.stream()
+                        .filter(a ->
+                                Boolean.TRUE.equals(
+                                        a.getReturningPatient()))
+                        .count();
+
+        stats.put(
+                "waitingQueue",
+                waitingQueue);
+
+        stats.put(
+                "priorityPatients",
+                priorityPatients);
+
+        double totalRevenue =
+                billRepository.findAll()
+                        .stream()
+                        .filter(b ->
+                                "PAID".equals(
+                                        b.getPaymentStatus()))
+                        .mapToDouble(
+                                b -> b.getAmount())
+                        .sum();
+
+        stats.put(
+                "totalRevenue",
+                totalRevenue);
+
+        // Last 5 appointments
+        List<Appointment> recentAppointments =
+                appointmentRepository.findAll();
+
+        int start =
+                Math.max(
+                        0,
+                        recentAppointments.size() - 5);
+
+        stats.put(
+                "recentAppointments",
+                recentAppointments.subList(
+                        start,
+                        recentAppointments.size()));
+long bookedAppointments =
+        appointmentRepository.findAll()
+                .stream()
+                .filter(a ->
+                        "BOOKED".equals(
+                                a.getStatus()))
+                .count();
+
+long completedAppointments =
+        appointmentRepository.findAll()
+                .stream()
+                .filter(a ->
+                        "COMPLETED".equals(
+                                a.getStatus()))
+                .count();
+
+long cancelledAppointments =
+        appointmentRepository.findAll()
+                .stream()
+                .filter(a ->
+                        "CANCELLED".equals(
+                                a.getStatus()))
+                .count();
+
+stats.put(
+        "bookedAppointments",
+        bookedAppointments);
+
+stats.put(
+        "completedAppointments",
+        completedAppointments);
+
+stats.put(
+        "cancelledAppointments",
+        cancelledAppointments);
         return stats;
     }
 }
